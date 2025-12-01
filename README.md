@@ -1,5 +1,6 @@
 ```
 # ⚙️ HTTP/1.1 Server from Scratch (Node.js + TCP)
+```
 
 ## 🔍 What This Project Is
 
