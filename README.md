@@ -6,7 +6,7 @@
 
 This project is a **from-scratch HTTP/1.1 server** built in **Node.js** using only the **`net` TCP module**.  
 There is **no `http.createServer`**, no Express, and **no HTTP parsing or routing libraries**.  
-Every HTTP request and response is manually handled over raw TCP sockets. [web:38][web:41]
+Every HTTP request and response is manually handled over raw TCP sockets. 
 
 This is designed to **understand HTTP deeply**:
 
@@ -22,7 +22,7 @@ This is designed to **understand HTTP deeply**:
 
 ### ✅ Prerequisites
 
-- [Node.js](https://nodejs.org/) installed (`node -v` to verify) [web:46]
+- [Node.js](https://nodejs.org/) installed (`node -v` to verify) 
 - (Optional) Git for version control
 
 ### 📁 Clone & Enter Project
@@ -229,7 +229,7 @@ Each sends a proper HTTP status line and a simple explanatory body.
 
 - Node.js event loop + non-blocking I/O.
 - Each connection is a socket handled via callbacks.
-- No threads to manage manually; Node can handle many concurrent requests naturally. [web:40]
+- No threads to manage manually; Node can handle many concurrent requests naturally. 
 
 ---
 
