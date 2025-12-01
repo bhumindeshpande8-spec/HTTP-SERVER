@@ -1,45 +1,43 @@
 ```
-### HTTP/1.1 Server from Scratch (Node.js + TCP Sockets)
+# ⚙️ HTTP/1.1 Server from Scratch (Node.js + TCP)
 
-## Overview
+## 🔍 What This Project Is
 
-This project is a **basic HTTP/1.1 server built completely from scratch** using **Node.js** and the **`net` (TCP) module**.  
-No high-level HTTP frameworks (`http.createServer`, Express, etc.) or routing/HTTP parsing libraries are used.  
-All HTTP request parsing and response formatting is implemented manually over raw TCP sockets. [web:38][web:41]
+This project is a **from-scratch HTTP/1.1 server** built in **Node.js** using only the **`net` TCP module**.  
+There is **no `http.createServer`**, no Express, and **no HTTP parsing or routing libraries**.  
+Every HTTP request and response is manually handled over raw TCP sockets. [web:38][web:41]
 
-The goal is to deeply understand:
+This is designed to **understand HTTP deeply**:
 
-- How HTTP sits on top of TCP  
-- What an HTTP message actually looks like (request line, headers, body)  
-- How methods like `GET` and `POST` are distinguished in the raw text  
-- How `Content-Length`, `Host`, and other headers are used
+- What does a raw HTTP request actually look like?
+- How does the server know it’s `GET` vs `POST`?
+- How are headers and body separated?
+- How is `Content-Length` used to read the body?
+- How does HTTP sit on top of TCP? [web:36]
 
 ---
 
-## Setup and Running
+## 🚀 Getting Started
 
-### Prerequisites
+### ✅ Prerequisites
 
-- Node.js installed (`node -v` to confirm) [web:46]
-- Git (optional, for version control)
+- [Node.js](https://nodejs.org/) installed (`node -v` to verify) [web:46]
+- (Optional) Git for version control
 
-### Clone and Install
+### 📁 Clone & Enter Project
 
 ```
-# Clone your repo (example)
 git clone <your-repo-url>
 cd HTTP-TASK   # or your folder name
 ```
 
-There are no external dependencies, so no `npm install` is required.
-
-### Run the Server
+### ▶️ Run the Server
 
 ```
 # Default port 8080
 node server.js
 
-# Or custom port
+# Or a custom port
 node server.js 3000
 ```
 
@@ -50,18 +48,20 @@ Raw HTTP/1.1 Server listening on port 8080
 Test with: curl http://localhost:8080/
 ```
 
+Keep this terminal open; the server runs here.
+
 ---
 
-## Supported Endpoints
+## 🌐 Available Endpoints
 
-All endpoints speak plain HTTP/1.1 over TCP.
+All endpoints use **HTTP/1.1 over raw TCP**.
 
 ### 1. `GET /` – Welcome
 
-- **Description**: Returns a simple welcome message.
-- **Response**: `200 OK`, `text/plain`
+Returns a simple welcome message.
 
-Example:
+- **Status**: `200 OK`
+- **Content-Type**: `text/plain`
 
 ```
 curl http://localhost:8080/
@@ -69,12 +69,12 @@ curl http://localhost:8080/
 
 ---
 
-### 2. `GET /echo?message=...` – Echo Message
+### 2. `GET /echo?message=...` – Echo
 
-- **Description**: Reads the `message` query parameter and returns it as the body.
-- **Response**: `200 OK`, `text/plain`
+Echoes back whatever you pass in the `message` query parameter.
 
-Example:
+- **Status**: `200 OK`
+- **Content-Type**: `text/plain`
 
 ```
 curl "http://localhost:8080/echo?message=hello"
@@ -85,22 +85,25 @@ curl "http://localhost:8080/echo?message=hello"
 
 ### 3. `POST /data` – Store JSON in Memory
 
-- **Description**: Accepts a JSON body, stores it in memory with an auto-incremented `id`, and returns the assigned `id`.
+Accepts a JSON body, stores it in memory with an auto-incremented `id`, and returns that `id`.
+
 - **Required Header**: `Content-Type: application/json`
-- **Response**: `200 OK`, `application/json`, body like:
+- **Status**: `200 OK`
+- **Content-Type**: `application/json`
+- **Body Example**:
 
 ```
 {"success": true, "id": 1}
 ```
 
-#### PowerShell example
+**Windows PowerShell (recommended):**
 
 ```
 $body = @{name="test"; value=123} | ConvertTo-Json
 Invoke-RestMethod -Uri "http://localhost:8080/data" -Method POST -Body $body -ContentType "application/json"
 ```
 
-#### curl.exe example (Windows)
+**curl.exe (PowerShell / CMD):**
 
 ```
 curl.exe -X POST http://localhost:8080/data -H "Content-Type: application/json" -d "{\"name\":\"test\",\"value\":123}"
@@ -108,10 +111,14 @@ curl.exe -X POST http://localhost:8080/data -H "Content-Type: application/json" 
 
 ---
 
-### 4. `GET /data` – Get All Stored Data
+### 4. `GET /data` – Get All Stored Items
 
-- **Description**: Returns all previously stored JSON objects as an array.
-- **Response**: `200 OK`, `application/json`, e.g.:
+Returns an array of all stored JSON objects.
+
+- **Status**: `200 OK`
+- **Content-Type**: `application/json`
+
+Example response:
 
 ```
 [
@@ -119,8 +126,6 @@ curl.exe -X POST http://localhost:8080/data -H "Content-Type: application/json" 
   {"id":2,"name":"another","value":456}
 ]
 ```
-
-Example:
 
 ```
 curl http://localhost:8080/data
@@ -130,60 +135,55 @@ curl http://localhost:8080/data
 
 ### 5. `GET /data/:id` – Get Single Item by ID
 
-- **Description**: Returns a single stored object by its numeric `id`.
-- **Response (found)**: `200 OK`, JSON object:
+Returns a single stored object by numeric `id`.
+
+- **On success**:
+  - **Status**: `200 OK`
+  - **Body**:
+    ```
+    {"id":1,"name":"test","value":123}
+    ```
+- **If not found**:
+  - **Status**: `404 Not Found`
+  - **Body**: `Item not found`
 
 ```
-{"id":1,"name":"test","value":123}
-```
-
-- **Response (not found)**: `404 Not Found`, plain text.
-
-Examples:
-
-```
-# After posting something (id = 1)
 curl http://localhost:8080/data/1
-
-# Non-existent id
-curl http://localhost:8080/data/999
+curl http://localhost:8080/data/999   # → 404
 ```
 
 ---
 
-## HTTP and Protocol Details
+## 🧠 How HTTP Is Handled Internally
 
-### Manual Request Parsing
+### 📨 Request Parsing (Manual)
 
-The server reads raw bytes from the TCP socket and:
+The server reads **raw bytes** from the TCP socket and:
 
 1. Finds the **request line**:  
-   `METHOD PATH HTTP/1.1` (e.g., `GET /data HTTP/1.1`). [web:38]
-2. Splits and stores **headers** (`Key: Value`) into a map (lowercased keys).
-3. Detects the end of headers using `\r\n\r\n` (CRLF CRLF).
-4. Reads the **body** according to `Content-Length` (for POST). [web:36]
+   `METHOD PATH HTTP/1.1`  
+   e.g. `GET /data HTTP/1.1` [web:38]
+2. Reads headers line by line until it hits a blank line (`\r\n\r\n`).
+3. Stores headers in a lowercase-key map (`host`, `content-length`, `content-type`, etc.).
+4. Uses `Content-Length` to know exactly how many bytes of **body** to read for POST. [web:36]
+5. Splits `PATH` and query string to handle `/echo?message=...`.
 
-This means the server understands:
+This is all done manually with strings and buffers—no HTTP helpers.
 
-- How a request is classified as `GET` vs `POST` (= first word of request line)
-- How large the body is (via `Content-Length`)
-- How query parameters look (`/echo?message=hello`)
+### 📨 Response Formatting (Manual)
 
-### Manual Response Formatting
+Every response is hand-built like this:
 
-Responses are constructed as raw strings:
+```
+HTTP/1.1 <status-code> <reason-phrase>\r\n
+Header-Name: value\r\n
+Another-Header: value\r\n
+...\r\n
+\r\n
+<body>
+```
 
-- **Status line**: `HTTP/1.1 200 OK\r\n`
-- **Headers**:
-  - `Date`
-  - `Server`
-  - `Connection`
-  - `Content-Type`
-  - `Content-Length`
-- **Blank line**: `\r\n`
-- **Body**: plain text or JSON string
-
-Example response:
+For example:
 
 ```
 HTTP/1.1 200 OK
@@ -195,62 +195,61 @@ Connection: close
 {"success":true,"id":1}
 ```
 
+Headers are calculated manually, including `Content-Length` based on the body size.
+
 ---
 
-## Error Handling
+## 🛡️ Error Handling
 
-The server handles several common error cases:
+The server handles several common cases:
 
 - **400 Bad Request**
   - Invalid JSON in `POST /data`
-  - Wrong or missing `Content-Type` for JSON
-
+  - Incorrect or missing `Content-Type: application/json`
 - **404 Not Found**
-  - Any path not matching the defined routes
-  - `GET /data/:id` when `id` does not exist
-
+  - Any unknown path
+  - `GET /data/:id` where `id` doesn’t exist
 - **500 Internal Server Error**
-  - Uncaught runtime errors while routing or parsing
+  - Unexpected runtime errors while parsing or routing
 
-Each error sends the appropriate HTTP status line and a simple message in the body.
-
----
-
-## Design Decisions and Architecture
-
-### In-Memory Data Store
-
-- Implemented with a simple `Map<number, object>`:
-  - `nextId` counter auto-increments
-  - Data is not persisted; it lives only while the server is running
-- This keeps focus on HTTP, not databases.
-
-### Concurrency Model
-
-- Node.js uses an **event-driven, non-blocking** I/O model.
-- Each new connection (socket) is handled via callbacks on the event loop.
-- This naturally supports many concurrent clients without manual thread management. [web:40]
+Each sends a proper HTTP status line and a simple explanatory body.
 
 ---
 
-## Testing Cheat Sheet
+## 🧱 Design & Architecture
 
-With server running on port 8080:
+### 🗂 In-Memory Store
+
+- Uses `Map<number, object>` to hold JSON objects.
+- `nextId` auto-increments for each new POST.
+- Data lives only while the server runs (no database on purpose).
+
+### ⚙️ Concurrency Model
+
+- Node.js event loop + non-blocking I/O.
+- Each connection is a socket handled via callbacks.
+- No threads to manage manually; Node can handle many concurrent requests naturally. [web:40]
+
+---
+
+## 🧪 Quick Testing Cheat Sheet
+
+With the server running on port 8080:
 
 ```
-# 1. GET /
+# 1. Basic welcome
 curl http://localhost:8080/
 
-# 2. GET /echo
+# 2. Echo
 curl "http://localhost:8080/echo?message=hello"
 
-# 3. POST /data (Linux/Mac style)
+# 3. (Linux/Mac) POST JSON
 curl -X POST http://localhost:8080/data \
   -H "Content-Type: application/json" \
   -d '{"name":"test","value":123}'
 ```
 
-**Windows PowerShell alternatives:**
+**Windows PowerShell equivalents:**
 
 ```
 # POST /data
@@ -266,20 +265,25 @@ Invoke-WebRequest -Uri "http://localhost:8080/data/1" | Select-Object -ExpandPro
 
 ---
 
-## Limitations and Possible Improvements
+## ⚠️ Limitations & Future Improvements
 
-- No persistent storage (everything is in memory).
-- No HTTPS (HTTP only, on top of TCP).
-- No chunked transfer encoding support.
-- No keep-alive connections (each request closes the connection).
-- Limited validation of malformed HTTP requests.
+Current limitations:
 
-Future improvements could include:
+- No persistent storage (all in-memory).
+- No HTTPS (plain HTTP over TCP).
+- No chunked transfer encoding.
+- No keep-alive connections (each request closes the socket).
+- Limited handling for very malformed HTTP messages.
 
-- Keep-alive and connection reuse.
-- Static file serving.
-- Basic authentication and CORS headers.
-- Body size limits and timeouts for robustness under heavy load.
+Possible next steps:
+
+- Implement HTTP keep-alive.
+- Add static file serving (e.g., `GET /index.html`).
+- Add basic authentication and CORS headers.
+- Add body size limits and timeouts for robustness under heavy load.
+
+---
+
+> **Goal of this project:** not to be a production server, but to truly **understand HTTP/1.1 over TCP by building it yourself**, line by line.
 ```
-
 
